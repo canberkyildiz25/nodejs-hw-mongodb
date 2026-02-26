@@ -3,10 +3,10 @@ import { readContacts } from '../utils/readContacts.js';
 import { writeContacts } from '../utils/writeContacts.js';
 
 export const addOneContact = async () => {
-	const contacts = await readContacts();
-	const newContact = createFakeContact();
+  const contacts = await readContacts();
+  const newContact = createFakeContact();
 
-	await writeContacts([...contacts, newContact]);
+  await writeContacts([...contacts, newContact]);
 };
 
 addOneContact();

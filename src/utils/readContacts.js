@@ -2,11 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { PATH_DB } from '../constants/contacts.js';
 
 export const readContacts = async () => {
-	const contactsData = await readFile(PATH_DB, 'utf-8');
+  const contactsData = await readFile(PATH_DB, 'utf-8');
 
-	if (!contactsData.trim()) {
-		return [];
-	}
+  if (!contactsData.trim()) {
+    return [];
+  }
 
-	return JSON.parse(contactsData);
+  return JSON.parse(contactsData);
 };
