@@ -89,3 +89,15 @@ npm run remove-all
 - Kişiler `@faker-js/faker` ile üretilir.
 - Veriler `src/db/db.json` dosyasına yazılır.
 - `generateContacts.js` dosyasında sayı şu an sabit olarak `5` kullanılıyor.
+
+## Controller Hata Yönetimi Standardı
+
+- Controller dosyalarında tekrar eden `try...catch` blokları yazmıyoruz.
+- Hata yönetimi için `src/utils/ctrlWrapper.js` içindeki `ctrlWrapper` yardımcı fonksiyonu kullanılıyor.
+- Controller içinde sadece iş mantığı kalıyor; olası hatalar otomatik olarak `next(error)` ile error middleware'e iletiliyor.
+
+Örnek kullanım (router):
+
+```js
+router.get('/contacts', ctrlWrapper(getContactsController));
+```
