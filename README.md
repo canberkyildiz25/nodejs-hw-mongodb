@@ -101,3 +101,37 @@ npm run remove-all
 ```js
 router.get('/contacts', ctrlWrapper(getContactsController));
 ```
+
+### API Rotaları
+
+Express tabanlı HTTP sunucu, `src/routers/contact.js` içindeki yollarla çalışır.
+`GET /contacts` isteği aşağıdaki sorgu parametrelerini destekler:
+
+- `page` (sayı) – sayfa numarası, varsayılan 1
+- `limit` (sayı) – her sayfadaki kayıt sayısı, varsayılan 20, max 100
+- `sort` – virgülle ayrılmış alan listesi; `-` öneki ile azalan sıralama (örn. `?sort=name,-createdAt`)
+- alternatif olarak `sortBy` ve `order` (`asc`/`desc`) parametreleri kullanılabilir
+
+Örnek:
+
+```
+GET /contacts?page=2&limit=10&sort=-createdAt,name
+```
+
+Cevap şu formatta döner:
+
+```json
+{
+  "status": 200,
+  "message": "Successfully found contacts!",
+  "total": 123,
+  "page": 2,
+  "pages": 13,
+  "limit": 10,
+  "sort": { "createdAt": -1, "name": 1 },
+  "data": [ /* ... */ ]
+}
+```
+
+Diğer rotalar: `GET /contacts/:id`, `POST /contacts`, `PATCH /contacts/:id`, `DELETE /contacts/:id`.
+

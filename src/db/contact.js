@@ -33,4 +33,9 @@ const contactSchema = new Schema(
   },
 );
 
+// Indexes to improve query performance for common filters/sorts
+contactSchema.index({ name: 1 });
+contactSchema.index({ isFavourite: 1 });
+contactSchema.index({ createdAt: -1 });
+
 export const Contact = model('contact', contactSchema);
