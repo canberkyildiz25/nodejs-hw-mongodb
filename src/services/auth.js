@@ -1,9 +1,11 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import createHttpError from 'http-errors';
 import { UserCollection } from '../db/user.js';
 import { SessionCollection } from '../db/session.js';
 import { env } from '../utils/env.js';
+import { sendMail } from '../utils/sendMail.js';
 
 const createSession = (userId) => {
   const accessToken = jwt.sign({ id: userId }, env('JWT_ACCESS_SECRET'), {
@@ -72,4 +74,49 @@ export const refreshUsersSession = async ({ sessionId, refreshToken }) => {
 
   const sessionData = createSession(session.userId);
   return SessionCollection.create({ userId: session.userId, ...sessionData });
+};
+
+export const requestResetPassword = async (email) => {
+  const user = await UserCollection.findOne({ email });
+  if (!user) {
+    throw createHttpError(404, 'User not found');
+  }
+
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetTokenExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  await UserCollection.updateOne({ _id: user._id }, { resetToken, resetTokenExpiry });
+
+  const resetLink = `${env('APP_DOMAIN')}/reset-password?token=${resetToken}`;
+
+  await sendMail({
+    to: email,
+    subject: 'Reset your password',
+    html: `
+      <h2>Password Reset Request</h2>
+      <p>Click the link below to reset your password. The link is valid for 5 minutes.</p>
+      <a href="${resetLink}">${resetLink}</a>
+      <p>If you didn't request this, please ignore this email.</p>
+    `,
+  });
+};
+
+export const resetPassword = async ({ token, password }) => {
+  const user = await UserCollection.findOne({
+    resetToken: token,
+    resetTokenExpiry: { $gt: new Date() },
+  });
+
+  if (!user) {
+    throw createHttpError(401, 'Token is expired or invalid');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await UserCollection.updateOne(
+    { _id: user._id },
+    { password: hashedPassword, resetToken: null, resetTokenExpiry: null },
+  );
+
+  await SessionCollection.deleteMany({ userId: user._id });
 };

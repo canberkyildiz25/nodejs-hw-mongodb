@@ -1,4 +1,5 @@
 import createHttpError from 'http-errors';
+import fs from 'fs/promises';
 import {
   createContact,
   deleteContact,
@@ -9,6 +10,7 @@ import {
 import { parseSort } from '../utils/sort.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
 import { Contact } from '../db/contact.js';
+import { uploadToCloudinary } from '../utils/cloudinary.js';
 
 export const getContactsController = async (req, res) => {
   const parsedPage = Math.max(Number(req.query.page) || 1, 1);
@@ -47,7 +49,14 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const createContactController = async (req, res) => {
-  const contact = await createContact({ ...req.body, userId: req.user._id });
+  let photoUrl = null;
+  if (req.file) {
+    const result = await uploadToCloudinary(req.file.path);
+    await fs.unlink(req.file.path);
+    photoUrl = result.secure_url;
+  }
+
+  const contact = await createContact({ ...req.body, userId: req.user._id, photo: photoUrl });
 
   res.status(201).json({
     status: 201,
@@ -58,7 +67,16 @@ export const createContactController = async (req, res) => {
 
 export const patchContactController = async (req, res) => {
   const { contactId } = req.params;
-  const contact = await updateContact(contactId, req.user._id, req.body);
+
+  let photoUrl;
+  if (req.file) {
+    const result = await uploadToCloudinary(req.file.path);
+    await fs.unlink(req.file.path);
+    photoUrl = result.secure_url;
+  }
+
+  const payload = photoUrl ? { ...req.body, photo: photoUrl } : req.body;
+  const contact = await updateContact(contactId, req.user._id, payload);
 
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
