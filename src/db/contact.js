@@ -26,6 +26,11 @@ const contactSchema = new Schema(
       required: true,
       default: 'personal',
     },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'users',
+      required: true,
+    },
   },
   {
     timestamps: true,
@@ -37,5 +42,6 @@ const contactSchema = new Schema(
 contactSchema.index({ name: 1 });
 contactSchema.index({ isFavourite: 1 });
 contactSchema.index({ createdAt: -1 });
+contactSchema.index({ userId: 1 });
 
 export const Contact = model('contact', contactSchema);
