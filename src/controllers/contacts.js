@@ -51,9 +51,12 @@ export const getContactByIdController = async (req, res) => {
 export const createContactController = async (req, res) => {
   let photoUrl = null;
   if (req.file) {
-    const result = await uploadToCloudinary(req.file.path);
-    await fs.unlink(req.file.path);
-    photoUrl = result.secure_url;
+    try {
+      const result = await uploadToCloudinary(req.file.path);
+      photoUrl = result.secure_url;
+    } finally {
+      await fs.unlink(req.file.path).catch(() => {});
+    }
   }
 
   const contact = await createContact({ ...req.body, userId: req.user._id, photo: photoUrl });
@@ -70,9 +73,12 @@ export const patchContactController = async (req, res) => {
 
   let photoUrl;
   if (req.file) {
-    const result = await uploadToCloudinary(req.file.path);
-    await fs.unlink(req.file.path);
-    photoUrl = result.secure_url;
+    try {
+      const result = await uploadToCloudinary(req.file.path);
+      photoUrl = result.secure_url;
+    } finally {
+      await fs.unlink(req.file.path).catch(() => {});
+    }
   }
 
   const payload = photoUrl ? { ...req.body, photo: photoUrl } : req.body;

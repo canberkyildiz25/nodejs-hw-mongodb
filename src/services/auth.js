@@ -5,7 +5,7 @@ import createHttpError from 'http-errors';
 import { UserCollection } from '../db/user.js';
 import { SessionCollection } from '../db/session.js';
 import { env } from '../utils/env.js';
-import { sendMail } from '../utils/sendMail.js';
+import { sendMail, renderTemplate } from '../utils/sendMail.js';
 
 const createSession = (userId) => {
   const accessToken = jwt.sign({ id: userId }, env('JWT_ACCESS_SECRET'), {
@@ -89,15 +89,12 @@ export const requestResetPassword = async (email) => {
 
   const resetLink = `${env('APP_DOMAIN')}/reset-password?token=${resetToken}`;
 
+  const html = await renderTemplate('reset-password', { name: user.name, resetLink });
+
   await sendMail({
     to: email,
     subject: 'Reset your password',
-    html: `
-      <h2>Password Reset Request</h2>
-      <p>Click the link below to reset your password. The link is valid for 5 minutes.</p>
-      <a href="${resetLink}">${resetLink}</a>
-      <p>If you didn't request this, please ignore this email.</p>
-    `,
+    html,
   });
 };
 
