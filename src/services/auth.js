@@ -6,6 +6,7 @@ import { UserCollection } from '../db/user.js';
 import { SessionCollection } from '../db/session.js';
 import { env } from '../utils/env.js';
 import { sendMail, renderTemplate } from '../utils/sendMail.js';
+import { validateCode, getFullNameFromGoogleTokenPayload } from '../utils/googleOAuth.js';
 
 const createSession = (userId) => {
   const accessToken = jwt.sign({ id: userId }, env('JWT_ACCESS_SECRET'), {
@@ -96,6 +97,35 @@ export const requestResetPassword = async (email) => {
     subject: 'Reset your password',
     html,
   });
+};
+
+export const loginOrRegisterWithGoogle = async (code) => {
+  const ticket = await validateCode(code);
+  const payload = ticket.getPayload();
+  if (!payload) throw createHttpError(401, 'Unauthorized');
+
+  if (!payload.email || !payload.email_verified) {
+    throw createHttpError(401, 'Google account email is not verified');
+  }
+
+  let user = await UserCollection.findOne({ email: payload.email });
+
+  if (!user) {
+    const password = await bcrypt.hash(crypto.randomBytes(10), 10);
+    user = await UserCollection.create({
+      name: getFullNameFromGoogleTokenPayload(payload),
+      email: payload.email,
+      googleId: payload.sub,
+      password,
+    });
+  } else if (!user.googleId) {
+    await UserCollection.updateOne({ _id: user._id }, { googleId: payload.sub });
+  }
+
+  await SessionCollection.deleteOne({ userId: user._id });
+
+  const sessionData = createSession(user._id);
+  return SessionCollection.create({ userId: user._id, ...sessionData });
 };
 
 export const resetPassword = async ({ token, password }) => {

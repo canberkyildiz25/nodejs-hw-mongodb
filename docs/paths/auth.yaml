@@ -1,0 +1,282 @@
+register:
+  post:
+    tags:
+      - Auth
+    summary: Register a new user
+    operationId: registerUser
+    description: Creates a new user account with name, email and password
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+              - email
+              - password
+            properties:
+              name:
+                type: string
+                example: John Doe
+              email:
+                type: string
+                example: john@example.com
+              password:
+                type: string
+                minLength: 8
+                example: secret123
+    responses:
+      '201':
+        description: User registered successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  example: 201
+                message:
+                  type: string
+                  example: Successfully registered a user!
+                data:
+                  $ref: '../components/schemas/user.yaml'
+      '409':
+        description: Email already in use
+
+login:
+  post:
+    tags:
+      - Auth
+    summary: Login user
+    operationId: loginUser
+    description: Authenticates a user and returns an access token
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                example: john@example.com
+              password:
+                type: string
+                example: secret123
+    responses:
+      '200':
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  example: 200
+                message:
+                  type: string
+                  example: Successfully logged in a user!
+                data:
+                  type: object
+                  properties:
+                    accessToken:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiJ9...
+      '401':
+        description: Invalid credentials
+
+logout:
+  post:
+    tags:
+      - Auth
+    summary: Logout user
+    operationId: logoutUser
+    description: Invalidates the current session and clears the refresh token cookie
+    security:
+      - bearerAuth: []
+    responses:
+      '204':
+        description: Logout successful
+
+refresh:
+  post:
+    tags:
+      - Auth
+    summary: Refresh access token
+    operationId: refreshSession
+    description: Issues a new access token using the refresh token stored in cookies
+    responses:
+      '200':
+        description: Token refreshed successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  example: 200
+                message:
+                  type: string
+                  example: Successfully refreshed a session!
+                data:
+                  type: object
+                  properties:
+                    accessToken:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiJ9...
+      '401':
+        description: Session not found
+
+forgotPassword:
+  post:
+    tags:
+      - Auth
+    summary: Request password reset email
+    operationId: forgotPassword
+    description: Sends a password reset link to the provided email address
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                example: john@example.com
+    responses:
+      '200':
+        description: Reset email sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  example: 200
+                message:
+                  type: string
+                  example: Reset password email has been successfully sent!
+      '404':
+        description: User not found
+
+resetPassword:
+  post:
+    tags:
+      - Auth
+    summary: Reset password with token
+    operationId: resetPassword
+    description: Resets the user password using a valid reset token
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - token
+              - password
+            properties:
+              token:
+                type: string
+                example: eyJhbGciOiJIUzI1NiJ9...
+              password:
+                type: string
+                minLength: 8
+                example: newpassword123
+    responses:
+      '200':
+        description: Password reset successful
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  example: 200
+                message:
+                  type: string
+                  example: Password has been successfully reset!
+      '401':
+        description: Token expired or invalid
+
+getOAuthUrl:
+  get:
+    tags:
+      - Auth
+    summary: Get Google OAuth URL
+    operationId: getGoogleOAuthUrl
+    description: Returns the Google OAuth authorization URL to redirect the user
+    responses:
+      '200':
+        description: Google OAuth URL generated
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  example: 200
+                message:
+                  type: string
+                  example: Successfully get Google OAuth url!
+                data:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      example: https://accounts.google.com/o/oauth2/auth?...
+
+confirmOAuth:
+  post:
+    tags:
+      - Auth
+    summary: Confirm Google OAuth login
+    operationId: confirmGoogleOAuth
+    description: Exchanges the Google OAuth code for an access token and logs in or registers the user
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                example: 4/0AX4XfWh...
+    responses:
+      '200':
+        description: Successfully logged in via Google
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: integer
+                  example: 200
+                message:
+                  type: string
+                  example: Successfully logged in via Google OAuth!
+                data:
+                  type: object
+                  properties:
+                    accessToken:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiJ9...
+      '401':
+        description: Unauthorized

@@ -1,0 +1,51 @@
+openapi: 3.1.0
+info:
+  title: Contacts API
+  version: '1.0.0'
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  description: API for managing contacts with authentication
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://example.com
+    description: Production server
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Contacts
+    description: Contacts management endpoints
+
+paths:
+  /auth/register:
+    $ref: './paths/auth.yaml#/register'
+  /auth/login:
+    $ref: './paths/auth.yaml#/login'
+  /auth/logout:
+    $ref: './paths/auth.yaml#/logout'
+  /auth/refresh:
+    $ref: './paths/auth.yaml#/refresh'
+  /auth/forgot-password:
+    $ref: './paths/auth.yaml#/forgotPassword'
+  /auth/reset-password:
+    $ref: './paths/auth.yaml#/resetPassword'
+  /auth/get-oauth-url:
+    $ref: './paths/auth.yaml#/getOAuthUrl'
+  /auth/confirm-oauth:
+    $ref: './paths/auth.yaml#/confirmOAuth'
+  /contacts:
+    $ref: './paths/contacts.yaml#/contacts'
+  /contacts/{contactId}:
+    $ref: './paths/contacts.yaml#/contactById'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    $ref: './components/schemas/index.yaml'

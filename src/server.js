@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
+import { swaggerDocs } from './middlewares/swaggerDocs.js';
 import { router } from './routers/index.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -23,13 +24,15 @@ const pinoOptions =
 
 const logger = pino(pinoOptions);
 
-export const setupServer = () => {
+export const setupServer = async () => {
   const app = express();
 
   app.use(cors());
   app.use(cookieParser());
   app.use(express.json());
   app.use(pinoHttp({ logger }));
+
+  app.use('/api-docs', swaggerDocs());
 
   app.use(router);
   app.use(notFoundHandler);
@@ -38,9 +41,9 @@ export const setupServer = () => {
   return app;
 };
 
-export const startServer = () => {
+export const startServer = async () => {
   const PORT = Number(env('PORT', '3000'));
-  const app = setupServer();
+  const app = await setupServer();
 
   app.listen(PORT, () => {
     logger.info({ port: PORT }, 'Server started');
