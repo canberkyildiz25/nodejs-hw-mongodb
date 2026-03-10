@@ -10,7 +10,7 @@ info:
 servers:
   - url: http://localhost:5000
     description: Local development server
-  - url: https://example.com
+  - url: https://nodejs-hw-mongodb-1pk9.onrender.com
     description: Production server
 
 tags:
